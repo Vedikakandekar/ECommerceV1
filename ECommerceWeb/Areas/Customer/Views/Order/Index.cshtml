@@ -1,0 +1,62 @@
+﻿@using Newtonsoft.Json
+@model OrderVM
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order History</title>
+    <link rel="stylesheet" href="~/css/Customer/OrderIndexStyleSheet.css">
+  
+</head>
+<body>
+    <div class="container my-5">
+        <header class="bg-primary text-white text-center py-3 mb-2 col-12 col-lg-10 mx-auto">
+            <h4 class="display-4">Your Orders</h4>
+            <div class="d-flex justify-content-end">
+                <div class="col-md-3 m-1">
+                    <select id="status-filter" asp-items="@Model.StatusList"  class="form-select">
+                        <option value="default" selected>-Filter by status-</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+  
+
+        <template id="order-template">
+            <div class="col-12 col-lg-10 p-1 mx-auto">
+                <div class="card order-card">
+                    <div class="row g-0">
+                        <div class="col-md-4 position-relative">
+                            <img class="order-image" alt="Image">
+                            <span class="order-date"></span>
+                            <span class="order-state"></span>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title"></h5>
+                                <p class="card-text description"></p>
+                                <p class="card-text quantity"></p>
+                                <p class="card-text total-price"></p>
+                                <p class="card-text shipping-address"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+   
+        <div id="order-list"></div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+                    const orders = @Html.Raw(JsonConvert.SerializeObject(Model.orderItemsList, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore }));
+            const shippingAddresses = @Html.Raw(JsonConvert.SerializeObject(Model.OrderShippingAddresses));
+        </script>
+       
+        <script src="~/js/Customer/OrderIndexScript.js"></script>
+    </div>
+</body>
+</html>

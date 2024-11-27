@@ -1,0 +1,203 @@
+﻿@using Newtonsoft.Json
+@model CartVM
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-commerce Cart </title>
+
+    <link rel="stylesheet" href="~/css/Customer/CartStyleSheet.css">
+</head>
+<body>
+    <header class="bg-primary text-white text-center py-3">
+        <h4 class="display-4">Your Cart</h4>
+        <p class="lead">Manage your Cart here..</p>
+    </header>
+    <form method="post" id="OrderForm">
+
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Cart Items</h5>
+                            <input asp-for="@Model.cart.CustomerId" hidden />
+                            <input asp-for="@Model.cart.CartId" hidden />
+                            <input asp-for="@Model.shippingAddress.CustomerId" hidden />
+                            <div class="row">
+                                <div class="col-12">
+                                    @for (int index = 0; index < Model.cart.CartItems.Count; index++)
+                                    {
+                                        var item = @Model.cart.CartItems[index];
+                                        <div class="card product-card">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="my-0">@item.Product.Name</h6>
+                                                        <input asp-for="cart.CartItems[index].Product.Name" hidden />
+                                                        @if(Model.cart.CartItems[index].Product.stock<1)
+                                                    {
+                                                        <span class="text-danger me-2" id="product-out-of-stock" >Currently Out of stock</span>
+                                                    }
+                                                        <input asp-for="cart.CartItems[index].Product.Description" hidden />
+                                                        <input asp-for="cart.CartItems[index].Product.Id" type="hidden" />
+                                                        <input asp-for="cart.CartItems[index].ProductId" type="hidden" />
+                                                        <input asp-for="cart.CartItems[index].Price" type="hidden" />
+                                                        <input asp-for="cart.CartItems[index].Product.Price" type="hidden" />
+                                                        <input asp-for="cart.CartItems[index].Product.CategoryId" type="hidden" />
+                                                        <input asp-for="cart.CartItems[index].Product.stock" type="hidden" />
+                                                        <input asp-for="cart.CartItems[index].Product.ImageUrl" type="hidden" />
+                                                        <input asp-for="cart.CartItems[index].Product.SellerId" type="hidden" />
+                                                        <input asp-for="cart.CartItems[index].CartItemId" type="hidden" />
+                                                        <input asp-for="cart.CartItems[index].CartId" type="hidden" />
+                                                        <input asp-for="cart.CartItems[index].CartItemId" type="hidden" />
+                                                    </div>
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="text-muted me-2">$<span  asp-for="cart.CartItems[index].Product.Price" id="product-price-@Model.cart.CartItems[index].ProductId" class="product-price" data-price="@item.Product.Price">@item.Product.Price</span></span>
+                                                        <div class="btn-group btn-group-sm me-2" role="group" aria-label="Quantity controls for Product 1">
+                                                            <button type="button" id="product-quantity-decrement-@Model.cart.CartItems[index].ProductId" class="btn btn-outline-secondary decrement">-</button>
+                                                            <button type="button" value="@Model.cart.CartItems[index].Quantity" id="product-quantity-@Model.cart.CartItems[index].ProductId"  class="btn btn-outline-secondary quantity" disabled>@Model.cart.CartItems[index].Quantity</button>
+                                                            <input asp-for="@Model.cart.CartItems[index].Quantity" id="quantityInput-@Model.cart.CartItems[index].ProductId" type="hidden" class="quantity-input" />
+                                                            <button type="button" id="product-quantity-increment-@Model.cart.CartItems[index].ProductId" class="btn btn-outline-secondary increment">+</button>
+                                                        </div>
+                                                        <a asp-controller="Cart" asp-action="Delete" asp-route-productId="@Model.cart.CartItems[index].Product.Id" class="text-danger" aria-label="Delete Product">
+                                                            <i class="bi bi-trash delete-icon"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="product-total" id="product-totalprice-@Model.cart.CartItems[index].ProductId"  data-price="@item.Product.Price">Total: $<span class="total-price"> @item.Product.Price</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @if (Model.cart.CartItems.Count > 0)
+                {
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Cart Summary</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Subtotal
+                                        <span id="subtotal" asp-for="@Model.subtotal">$@Model.subtotal</span>
+                                        <input hidden id="subtotalSpan" asp-for="@Model.subtotal" />
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Shipping
+                                        <span id="shipping-fees" asp-for="@Model.shippingFees">$@Model.shippingFees</span>
+                                        <input hidden id="shippinglSpan" asp-for="@Model.shippingFees" />
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <strong>Total (USD)</strong>
+                                        <strong id="total" asp-for="@Model.total">$@Model.total</strong>
+                                        <input hidden id="totalSpan" asp-for="@Model.total" />
+                                    </li>
+                                </ul>
+
+
+
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        <input id="AddressId" asp-for="@Model.shippingAddress.AddressId" type="hidden" />
+        <input id="FullName" asp-for="@Model.shippingAddress.FullName" type="hidden" />
+        <input id="PhoneNumber" asp-for="@Model.shippingAddress.PhoneNumber" type="hidden" />
+        <input id="Street"  asp-for="@Model.shippingAddress.Street" type="hidden" />
+        <input id="City" asp-for="@Model.shippingAddress.City" type="hidden" />
+        <input id="State" asp-for="@Model.shippingAddress.State" type="hidden" />
+        <input id="Country"  asp-for="@Model.shippingAddress.Country" type="hidden" />
+        <input id="ZipCode" asp-for="@Model.shippingAddress.ZipCode" type="hidden" />
+        <div class="card mb-4 mt-2">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Select Shipping Address</h5>
+                <div id="addressList">
+                 @for (int index = 0; index < Model.addressList.Count; index++)
+                    {
+                
+                   
+                        <input id="AddressId" asp-for="@Model.addressList[index].AddressId" type="hidden" />
+                        <div class="card address-card mb-3" id="addressCard-@Model.addressList[index].AddressId" data-address-id="@Model.addressList[index].AddressId">
+                            <div class="card-body">
+                                <a asp-controller="Cart" asp-action="DeleteAddress" asp-route-addressId="@Model.addressList[index].AddressId"  class="position-absolute top-0 end-0 m-2" aria-label="Delete">
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </a>
+                                <h6 id="addr-fullname-@Model.addressList[index].AddressId" class="card-title">@Model.addressList[index].FullName</h6>
+                                <h6 id="addr-phone-@Model.addressList[index].AddressId" class="card-title">@Model.addressList[index].PhoneNumber</h6>
+                                <p  class="card-text"> <spanid="addr-street-@Model.addressList[index].AddressId">@Model.addressList[index].Street</spanid> , <span id="addr-city-@Model.addressList[index].AddressId"> @Model.addressList[index].City</span> , <span id="addr-state-@Model.addressList[index].AddressId">@Model.addressList[index].State</span> ,<span id="addr-country-@Model.addressList[index].AddressId">@Model.addressList[index].Country</span>,<span id="addr-zipcode-@Model.addressList[index].AddressId"> @Model.addressList[index].ZipCode</span> </p>
+
+                            </div>
+                        </div>
+                   
+                
+                 }
+                 </div>
+                <button id="addNewAddressBtn" type="button" class="btn btn-outline-primary mt-3">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Address
+                </button>
+            </div>
+        </div>
+        <button id="proceedToPaymentBtn" type="submit" class="btn btn-primary btn-lg w-100 mt-4">Proceed to Payment</button>            
+    </form>
+    <div id="shippingOverlay" class="overlay">
+        <div class="card shipping-card">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Shipping Address</h5>
+                <form method="post" id="AddressForm">
+                    <input asp-for="@Model.shippingAddress.CustomerId" class="form-control" id="CustomerId" hidden />
+                    <input asp-for="@Model.shippingAddress.AddressId" class="form-control" id="AddressId" hidden />
+
+                    <div class="mb-3">
+                        <label for="fullName" class="form-label">Full Name</label>
+                        <input type="text" asp-for="@Model.shippingAddress.FullName" class="form-control" id="fullName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <input type="text" asp-for="@Model.shippingAddress.Street" class="form-control" id="address" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="city" class="form-label">City</label>
+                        <input type="text" asp-for="@Model.shippingAddress.City" class="form-control" id="city" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="state" class="form-label">State</label>
+                            <input type="text" asp-for="@Model.shippingAddress.State" class="form-control" id="state" required>
+                        </div>
+                        <div class="col">
+                            <label for="country" class="form-label">Country</label>
+                            <input type="text" asp-for="@Model.shippingAddress.Country" class="form-control" id="country" required>
+                        </div>
+                        <div class="col">
+                            <label for="zipCode" class="form-label">ZIP Code</label>
+                            <input type="text" asp-for="@Model.shippingAddress.ZipCode" class="form-control" id="zipCode" required>
+                        </div>
+                        <div class="col">
+                            <label for="phonenumber" class="form-label">Phone Number</label>
+                            <input type="text" asp-for="@Model.shippingAddress.PhoneNumber" class="form-control" id="phonenumber" required>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" id="cancelBtn" class="btn btn-secondary me-2">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Address</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+         const cartItemList = @Html.Raw(JsonConvert.SerializeObject(Model.cart.CartItems, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore }));
+              const addressList = @Html.Raw(JsonConvert.SerializeObject(Model.addressList, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore }));
+    </script>
+     <script src="~/js/Customer/CartIndexScript.js"></script>
+</body>
+</html>
