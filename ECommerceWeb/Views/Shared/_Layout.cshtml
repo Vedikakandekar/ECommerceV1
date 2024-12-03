@@ -1,0 +1,202 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ECommerceWeb</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ECommerceWeb.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />
+    <link rel="stylesheet" href="//cdn.datatables.net/1.13.3/css/jquery.dataTables.min.css" />
+    <style>
+        .liked {
+            color: #c11c84;
+        }
+    </style></head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-toggleable-sm navbar-light bg-light border-bottom box-shadow mb-3" data-bs-theme="light">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ECommerceWeb</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="Customer" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="Customer" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                        @if (User.IsInRole(StaticDetails.Role_Admin))
+                        {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="Admin" asp-controller="Category" asp-action="Index"> Category</a>
+                                </li>
+                        }
+                        @if (User.IsInRole(StaticDetails.Role_Seller))
+                        {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="Seller" asp-controller="Product" asp-action="Index">Products</a>
+                                </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="Seller" asp-controller="Order" asp-action="Index">Orders</a>
+                            </li>
+                        }
+                        @if (User.IsInRole(StaticDetails.Role_Customer))
+                        {
+                            <li>
+
+                                <a class="nav-link text-dark" asp-area="Customer" asp-controller="Likes" asp-action="Index">    <i class="bi bi-heart-fill liked"></i>
+
+                            </a>
+                            </li>
+
+                            <li>
+
+                                <a class="nav-link text-dark" asp-area="Customer" asp-controller="Cart" asp-action="Index"> <i class="bi bi-cart4"></i></a>
+                            </li>
+
+                           
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="Customer" asp-controller="Order" asp-action="Index">Orders</a>
+                            </li>
+
+                           
+                          
+                        }
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="#" id="notificationIcon" data-bs-toggle="modal" data-bs-target="#notificationModal">
+                                <i class="bi bi-bell-fill fs-5"></i>
+                                <span class="notification-badge" id="notificationBadge"></span>
+                            </a>
+                        </li>
+                    </ul>
+                        
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+        </nav>
+        <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="notificationModalLabel">Notifications</h5>
+                        <button type="button" id="closeModal"class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="notificationList">
+                      
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            <partial name="_Notifications" />
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
+    <script>
+       
+        var userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value"; 
+        
+                
+       
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/orderStatusHub")
+            .build();
+
+     
+        const notifications = JSON.parse(sessionStorage.getItem('notifications')) || [];
+
+        updateNotificationList();
+        updateNotificationBadge();
+
+       
+
+        connection.on("ReceiveNotification", function (message) {
+            addNotification(message);
+
+        });
+        connection.start().catch(function (err) {
+            return Console.error(err.toString());
+        });
+     
+        
+
+        function addNotification(message) {
+            const notification = {
+                id: Date.now(),
+                message: message,
+                time: new Date().toLocaleString(),
+                read: false
+            };
+          
+            notifications.unshift(notification);
+            saveNotifications();
+            updateNotificationBadge();
+            updateNotificationList();
+           
+        }
+
+        function saveNotifications() {
+            sessionStorage.setItem('notifications', JSON.stringify(notifications));
+        }
+
+        function updateNotificationBadge() {
+          
+            const unreadCount = notifications.filter(n => !n.read).length;
+            $('#notificationBadge').text(unreadCount).toggle(unreadCount > 0);
+           
+        }
+
+        function updateNotificationList() {
+            
+            const list = $('#notificationList').empty();
+            notifications.forEach(notification => {
+                list.append(`
+                        <div class="notification-item border-bottom py-2">
+                            <p class="mb-0"><strong>${notification.message}</strong></p>
+                            <small class="text-muted">${notification.time}</small>
+                        </div>
+                    `);
+            });
+        }
+        $('#closeModal').on('click', function () {
+           
+            notifications.forEach(notification => notification.read = true);
+            saveNotifications();
+            updateNotificationBadge();
+
+            
+        });
+
+        
+     
+    </script>
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2024 - ECommerceWeb - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script src="//cdn.datatables.net/1.13.3/js/jquery.dataTables.min.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
